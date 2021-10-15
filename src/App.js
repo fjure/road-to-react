@@ -1,23 +1,14 @@
-import logo from './logo.svg';
-import './App.css';
+import * as React from "react";
+import "./App.css";
+
+// Daumenregel: Wenn eine Variable nichts aus dem Funktionenskörper benötigt (z.B. Parameter), deklariere sie außerhalb
+// Dadurch wird sie nicht bei jedem Funktionsaufruf neu definiert.
+const title = "react";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Hello World!</h1>
     </div>
   );
 }
