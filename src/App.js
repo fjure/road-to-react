@@ -1,7 +1,6 @@
 import * as React from "react";
 import "./App.css";
 
-
 // A callback function is introduced (A), is used elsewhere (B) but calls back to the place it was introduced (C)
 const App = () => {
   console.log("App renders");
@@ -25,22 +24,25 @@ const App = () => {
     },
   ];
 
-  // A
+  const [searchTerm, setSearchTerm] = React.useState("");
+
   const handleSearch = (event) => {
-    // C
-    console.log(event.target.value);
+    setSearchTerm(event.target.value);
   };
+
+  const searchedStores = stories.filter((story) =>
+    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
       <h1>My Hacker Stories</h1>
 
-      {/* // B */}
       <Search onSearch={handleSearch} />
 
       <hr />
 
-      <List list={stories} />
+      <List list={searchedStores} />
     </div>
   );
 };
@@ -48,23 +50,10 @@ const App = () => {
 const Search = (props) => {
   console.log("Search renders");
 
-  const [searchTerm, setSearchTerm] = React.useState("");
-
-  const handleChange = (event) => {
-    setSearchTerm(event.target.value);
-
-    // B
-    props.onSearch(event);
-  };
-
   return (
     <div>
       <label htmlFor="search">Search: </label>
-      <input id="search" type="text" onChange={handleChange} />
-
-      <p>
-        Searching for <strong>{searchTerm}</strong>
-      </p>
+      <input id="search" type="text" onChange={props.onSearch} />
     </div>
   );
 };
