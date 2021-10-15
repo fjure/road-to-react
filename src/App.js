@@ -1,6 +1,8 @@
 import * as React from "react";
 import "./App.css";
 
+
+// A callback function is introduced (A), is used elsewhere (B) but calls back to the place it was introduced (C)
 const App = () => {
   console.log("App renders");
 
@@ -23,11 +25,18 @@ const App = () => {
     },
   ];
 
+  // A
+  const handleSearch = (event) => {
+    // C
+    console.log(event.target.value);
+  };
+
   return (
     <div>
       <h1>My Hacker Stories</h1>
 
-      <Search />
+      {/* // B */}
+      <Search onSearch={handleSearch} />
 
       <hr />
 
@@ -36,13 +45,16 @@ const App = () => {
   );
 };
 
-const Search = () => {
+const Search = (props) => {
   console.log("Search renders");
 
   const [searchTerm, setSearchTerm] = React.useState("");
 
   const handleChange = (event) => {
     setSearchTerm(event.target.value);
+
+    // B
+    props.onSearch(event);
   };
 
   return (
