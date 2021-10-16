@@ -1,6 +1,18 @@
 import * as React from "react";
 import "./App.css";
 
+const useSemiPersistentState = (key, initialState) => {
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) || initialState
+  );
+
+  React.useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value, key]);
+
+  return [value, setValue];
+};
+
 // A callback function is introduced (A), is used elsewhere (B) but calls back to the place it was introduced (C)
 const App = () => {
   console.log("App renders");
@@ -24,14 +36,7 @@ const App = () => {
     },
   ];
 
-  const [searchTerm, setSearchTerm] = React.useState(
-    // Nullish coalescing operator to prevent showing React when input field is empty => (null || "React") it chooses "React" obviously
-    localStorage.getItem("search") ?? "React"
-  );
-
-  React.useEffect(() => {
-    localStorage.setItem("search", searchTerm);
-  }, [searchTerm]);
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
