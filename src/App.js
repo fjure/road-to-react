@@ -47,44 +47,41 @@ const App = () => {
   );
 };
 
-const Search = (props) => {
-  console.log("Search renders");
+const Search = ({ search, onSearch }) => (
+  <div>
+    <label htmlFor="search">Search: </label>
+    <input id="search" type="text" value={search} onChange={onSearch} />
+  </div>
+);
 
-  return (
-    <div>
-      <label htmlFor="search">Search: </label>
-      <input
-        id="search"
-        type="text"
-        value={props.search}
-        onChange={props.onSearch}
-      />
-    </div>
-  );
-};
-
-const List = (props) => {
+// Variation 2: Spread and Rest Operator
+// Rest operator is used to destructure the objectID from the rest of the item object
+// Afterwards the item object is spread with its key/value pairs into the Item component
+// 1. Step
+const List = ({ list }) => {
   console.log("List renders");
   return (
     <ul>
-      {props.list.map((item) => (
-        <Item key={item.objectID} item={item} />
+      {/* Final Step: Seperate objectID from item object since it is not passed to the item component (Rest-Operator) */}
+      {list.map(({ objectID, ...item }) => (
+        // 2. Step: pass all the key-value pairs as attribute/value pairs to the jsx element (Spread-Operator)
+        <Item key={objectID} {...item} />
       ))}
     </ul>
   );
 };
 
-const Item = (props) => {
+const Item = ({ title, url, author, num_comments, points }) => {
   console.log("Item renders");
 
   return (
     <li>
       <span>
-        <a href={props.item.url}>{props.item.title}</a>
+        <a href={url}>{title}</a>
       </span>
-      <span>{props.item.author}</span>
-      <span>{props.item.num_comments}</span>
-      <span>{props.item.points}</span>
+      <span>{author}</span>
+      <span>{num_comments}</span>
+      <span>{points}</span>
     </li>
   );
 };
