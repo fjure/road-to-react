@@ -2,6 +2,8 @@ import * as React from "react";
 import axios from "axios";
 import styled from "styled-components";
 
+import { ReactComponent as Check } from "./check.svg";
+
 const StyledContainer = styled.div`
   height: 100vw;
   padding: 20px;
@@ -49,6 +51,11 @@ const StyledButton = styled.button`
   &:hover {
     background: #171212;
     color: #ffffff;
+  }
+
+  &:hover > svg > g {
+    fill: #ffffff;
+    stroke: #ffffff;
   }
 `;
 
@@ -285,7 +292,7 @@ const Item = ({ item, onRemoveItem }) => {
       <StyledColumn width="10%">{item.points}</StyledColumn>
       <StyledColumn width="10%">
         <StyledButtonSmall type="button" onClick={handleRemoveItem}>
-          Dismiss
+          <Check height="18px" width="18px" />
         </StyledButtonSmall>
       </StyledColumn>
     </StyledItem>
