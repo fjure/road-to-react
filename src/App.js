@@ -28,6 +28,7 @@ const storiesReducer = (state, action) => {
         ...state,
         isLoading: false,
         isError: false,
+        data: action.payload,
       };
     case "STORIES_FETCH_FAILURE":
       return {
@@ -57,7 +58,11 @@ const App = () => {
     isError: false,
   });
 
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
+
   React.useEffect(() => {
+    if (!searchTerm) return;
+
     dispatchStories({
       type: "STORIES_FETCH_INIT",
     });
@@ -69,14 +74,11 @@ const App = () => {
           type: "STORIES_FETCH_SUCCESS",
           payload: result.hits,
         });
-        console.log(result.hits);
       })
       .catch(() => {
         dispatchStories({ type: "STORIES_FETCH_FAILURE" });
       });
-  }, []);
-
-  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
+  }, [searchTerm]);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -89,7 +91,7 @@ const App = () => {
     });
   };
 
-  const searchedStores = stories.data.filter((story) =>
+  const searchedStories = stories.data.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -113,7 +115,7 @@ const App = () => {
       {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
-        <List list={searchedStores} onRemoveItem={handleRemoveStory} />
+        <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
     </div>
   );
