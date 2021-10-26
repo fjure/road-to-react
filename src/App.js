@@ -60,7 +60,7 @@ const App = () => {
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
-  React.useEffect(() => {
+  const handleFetchStories = React.useCallback(() => {
     if (!searchTerm) return;
 
     dispatchStories({
@@ -79,6 +79,10 @@ const App = () => {
         dispatchStories({ type: "STORIES_FETCH_FAILURE" });
       });
   }, [searchTerm]);
+
+  React.useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
