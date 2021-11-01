@@ -91,12 +91,18 @@ const StyledSearchForm = styled.form`
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
 const useSemiPersistentState = (key, initialState) => {
+  const isMounted = React.useRef(false);
+
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
   );
 
   React.useEffect(() => {
-    localStorage.setItem(key, value);
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      localStorage.setItem(key, value);
+    }
   }, [value, key]);
 
   return [value, setValue];
@@ -135,6 +141,12 @@ const storiesReducer = (state, action) => {
   }
 };
 
+const getSumComments = (stories) => {
+  console.log("C");
+
+  return stories.data.reduce((result, value) => result + value.num_comments, 0);
+};
+
 // A callback function is introduced (A), is used elsewhere (B) but calls back to the place it was introduced (C)
 const App = () => {
   console.log("App renders");
@@ -144,6 +156,8 @@ const App = () => {
     isLoading: false,
     isError: false,
   });
+
+  const sumComments = React.useMemo(() => getSumComments(stories), [stories]);
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
@@ -178,16 +192,18 @@ const App = () => {
     event.preventDefault();
   };
 
-  const handleRemoveStory = (item) => {
+  const handleRemoveStory = React.useCallback((item) => {
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
     });
-  };
+  }, []);
 
   return (
     <StyledContainer>
-      <StyledHeadlinePrimary>My Hacker Stories</StyledHeadlinePrimary>
+      <StyledHeadlinePrimary>
+        My Hacker Stories with {sumComments} comments.
+      </StyledHeadlinePrimary>
 
       <SearchForm
         searchTerm={searchTerm}
@@ -262,18 +278,18 @@ const InputWithLabel = ({
 // Rest operator is used to destructure the objectID from the rest of the item object
 // Afterwards the item object is spread with its key/value pairs into the Item component
 // 1. Step
-const List = ({ list, onRemoveItem }) => {
-  console.log("List renders");
-  return (
-    <ul>
-      {/* Final Step: Seperate objectID from item object since it is not passed to the item component (Rest-Operator) */}
-      {list.map((item) => (
-        // 2. Step: pass all the key-value pairs as attribute/value pairs to the jsx element (Spread-Operator)
-        <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
-      ))}
-    </ul>
-  );
-};
+const List = React.memo(
+  ({ list, onRemoveItem }) =>
+    console.log("B:List") || (
+      <ul>
+        {/* Final Step: Seperate objectID from item object since it is not passed to the item component (Rest-Operator) */}
+        {list.map((item) => (
+          // 2. Step: pass all the key-value pairs as attribute/value pairs to the jsx element (Spread-Operator)
+          <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+        ))}
+      </ul>
+    )
+);
 
 const Item = ({ item, onRemoveItem }) => {
   console.log("Item renders");
