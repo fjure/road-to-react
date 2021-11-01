@@ -26,7 +26,11 @@ const StyledItem = styled.li`
   padding-bottom: 5px;
 `;
 
-const StyledColumn = styled.span`
+interface IColumn {
+  width: string;
+}
+
+const StyledColumn = styled.span<IColumn>`
   padding: 0 5px;
   white-space: nowrap;
   overflow: hidden;
@@ -90,7 +94,21 @@ const StyledSearchForm = styled.form`
 
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
-const useSemiPersistentState = (key, initialState) => {
+type Story = {
+  objectID: string;
+  url: string;
+  title: string;
+  author: string;
+  num_comments: number;
+  points: number;
+};
+
+type Stories = Array<Story>;
+
+const useSemiPersistentState = (
+  key: string,
+  initialState: string
+): [string, (newValue: string) => void] => {
   const isMounted = React.useRef(false);
 
   const [value, setValue] = React.useState(
@@ -108,7 +126,37 @@ const useSemiPersistentState = (key, initialState) => {
   return [value, setValue];
 };
 
-const storiesReducer = (state, action) => {
+type StoriesState = {
+  data: Stories;
+  isLoading: boolean;
+  isError: boolean;
+};
+
+interface StoriesFetchInitAction {
+  type: "STORIES_FETCH_INIT";
+}
+
+interface StoriesFetchSuccessAction {
+  type: "STORIES_FETCH_SUCCESS";
+  payload: Stories;
+}
+
+interface StoriesFetchFailureAction {
+  type: "STORIES_FETCH_FAILURE";
+}
+
+interface StoriesRemoveAction {
+  type: "REMOVE_STORY";
+  payload: Story;
+}
+
+type StoriesAction =
+  | StoriesFetchInitAction
+  | StoriesFetchSuccessAction
+  | StoriesFetchFailureAction
+  | StoriesRemoveAction;
+
+const storiesReducer = (state: StoriesState, action: StoriesAction) => {
   switch (action.type) {
     case "STORIES_FETCH_INIT":
       return {
@@ -141,12 +189,6 @@ const storiesReducer = (state, action) => {
   }
 };
 
-const getSumComments = (stories) => {
-  console.log("C");
-
-  return stories.data.reduce((result, value) => result + value.num_comments, 0);
-};
-
 // A callback function is introduced (A), is used elsewhere (B) but calls back to the place it was introduced (C)
 const App = () => {
   console.log("App renders");
@@ -156,8 +198,6 @@ const App = () => {
     isLoading: false,
     isError: false,
   });
-
-  const sumComments = React.useMemo(() => getSumComments(stories), [stories]);
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
@@ -183,16 +223,16 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleSearchInput = (event) => {
+  const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
-  const handleSearchSubmit = (event) => {
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setUrl(`${API_ENDPOINT}${searchTerm}`);
     event.preventDefault();
   };
 
-  const handleRemoveStory = React.useCallback((item) => {
+  const handleRemoveStory = React.useCallback((item: Story) => {
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
@@ -201,9 +241,7 @@ const App = () => {
 
   return (
     <StyledContainer>
-      <StyledHeadlinePrimary>
-        My Hacker Stories with {sumComments} comments.
-      </StyledHeadlinePrimary>
+      <StyledHeadlinePrimary>My Hacker Stories</StyledHeadlinePrimary>
 
       <SearchForm
         searchTerm={searchTerm}
@@ -222,7 +260,17 @@ const App = () => {
   );
 };
 
-const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
+type SearchFormProps = {
+  searchTerm: string;
+  onSearchInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearchSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+};
+
+const SearchForm = ({
+  searchTerm,
+  onSearchInput,
+  onSearchSubmit,
+}: SearchFormProps) => (
   <StyledSearchForm onSubmit={onSearchSubmit}>
     <InputWithLabel
       id="search"
@@ -239,6 +287,15 @@ const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
   </StyledSearchForm>
 );
 
+type InputWithLabelProps = {
+  id: string;
+  value: string;
+  type?: string;
+  onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isFocused?: boolean;
+  children: React.ReactNode;
+};
+
 const InputWithLabel = ({
   id,
   value,
@@ -246,9 +303,9 @@ const InputWithLabel = ({
   onInputChange,
   isFocused,
   children,
-}) => {
+}: InputWithLabelProps) => {
   // A
-  const inputRef = React.useRef();
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   // C
   React.useEffect(() => {
@@ -274,24 +331,31 @@ const InputWithLabel = ({
   );
 };
 
+type ListProps = {
+  list: Stories;
+  onRemoveItem: (item: Story) => void;
+};
+
 // Variation 2: Spread and Rest Operator
 // Rest operator is used to destructure the objectID from the rest of the item object
 // Afterwards the item object is spread with its key/value pairs into the Item component
 // 1. Step
-const List = React.memo(
-  ({ list, onRemoveItem }) =>
-    console.log("B:List") || (
-      <ul>
-        {/* Final Step: Seperate objectID from item object since it is not passed to the item component (Rest-Operator) */}
-        {list.map((item) => (
-          // 2. Step: pass all the key-value pairs as attribute/value pairs to the jsx element (Spread-Operator)
-          <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
-        ))}
-      </ul>
-    )
+const List = ({ list, onRemoveItem }: ListProps) => (
+  <ul>
+    {/* Final Step: Seperate objectID from item object since it is not passed to the item component (Rest-Operator) */}
+    {list.map((item) => (
+      // 2. Step: pass all the key-value pairs as attribute/value pairs to the jsx element (Spread-Operator)
+      <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+    ))}
+  </ul>
 );
 
-const Item = ({ item, onRemoveItem }) => {
+type ItemProps = {
+  item: Story;
+  onRemoveItem: (item: Story) => void;
+};
+
+const Item = ({ item, onRemoveItem }: ItemProps) => {
   console.log("Item renders");
 
   const handleRemoveItem = () => {
@@ -300,7 +364,7 @@ const Item = ({ item, onRemoveItem }) => {
 
   return (
     <StyledItem>
-      <StyledColumn style={{ width: "40%" }}>
+      <StyledColumn width="40%">
         <a href={item.url}>{item.title}</a>
       </StyledColumn>
       <StyledColumn width="30%">{item.author}</StyledColumn>
